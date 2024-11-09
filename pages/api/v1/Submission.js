@@ -4,10 +4,15 @@ import {
   updateItem,
   deleteItem,
 } from "../../../utils/crud";
+import withCors from "../../../utils/cors";
 
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   const method = req.method;
-  const tableName = "submission";
+  console.log("method");
+  console.log(method);
+
+
+  const tableName = "contribution";
   switch (method) {
     case "POST":
       return createItem(tableName, req, res);
@@ -22,3 +27,6 @@ export default async function handler(req, res) {
       res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withCors(handler)

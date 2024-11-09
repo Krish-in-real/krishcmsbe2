@@ -1,155 +1,155 @@
 generator client {
-  provider = "prisma-client-js"
+provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+provider = "mysql"
+url = env("DATABASE_URL")
 }
 
-model User {
-  id         Int     @id @default(autoincrement())
-  firstName  String
-  lastName   String
-  password   String
-  email      String  @unique
+model Account {
+id Int @id @default(autoincrement())
+firstName String
+lastName String
+hashedPassword String
+email String @unique
 }
 
-model Participant {
-  participantId      Int                   @id @default(autoincrement())
-  firstName          String                @db.VarChar(50)
-  lastName           String                @db.VarChar(50)
-  email              String                @unique @db.VarChar(100)
-  password           String                @db.VarChar(255)
-  role               Role                  @default(participant)
-  description        String                @default("") @db.VarChar(255)
-  expertise          String                @default("") @db.VarChar(255)
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+model Member {
+memberId Int @id @default(autoincrement())
+firstName String @db.VarChar(50)
+lastName String @db.VarChar(50)
+email String @unique @db.VarChar(100)
+hashedPassword String @db.VarChar(255)
+userRole UserRole @default(member)
+bio String @default("") @db.VarChar(255)
+skills String @default("") @db.VarChar(255)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  enrollments        Enrollment[]
-  submissions        Submission[]
-  feedbacks          Feedback[]            @relation("FeedbackEvaluator")
-  mentorshipsAsMentor MentorshipProgram[]  @relation("Mentor")
-  mentorshipsAsMentee MentorshipProgram[]  @relation("Mentee")
+registrations Registration[]
+contributions Contribution[]
+reviews Review[] @relation("ReviewEvaluator") // Removed fields and references here
+mentorPrograms Mentorship[] @relation("Mentor")
+menteePrograms Mentorship[] @relation("Mentee")
 }
 
-model Event {
-  eventId       Int       @id @default(autoincrement())
-  name          String    @db.VarChar(100)
-  description   String?
-  startDate     DateTime
-  endDate       DateTime
-  price          Float?   
-  location      String?   @db.VarChar(255)
-  meetingLink   String?   @db.VarChar(255)
-  recordingLink  String?  @db.VarChar(255)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model Review {
+reviewId Int @id @default(autoincrement())
+contributionId Int
+evaluatorId Int
+feedbackText String?
+score Int
+feedbackDate DateTime
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  enrollments   Enrollment[]
-  submissions   Submission[]
-  schedules     Schedule[]
+contribution Contribution @relation(fields: [contributionId], references: [contributionId])
+evaluator Member @relation("ReviewEvaluator", fields: [evaluatorId], references: [memberId]) // Correctly specifies fields and references
 }
 
-model Enrollment {
-  enrollmentId    Int           @id @default(autoincrement())
-  participantId   Int
-  eventId         Int
-  registrationDate DateTime
-  ticketType      TicketType
-  paymentStatus   PaymentStatus @default(pending)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Workshop {
+workshopId Int @id @default(autoincrement())
+title String @db.VarChar(100)
+details String?
+startDatetime DateTime
+endDatetime DateTime
+cost Float?
+venue String? @db.VarChar(255)
+virtualLink String? @db.VarChar(255)
+resourceLink String? @db.VarChar(255)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  participant     Participant @relation(fields: [participantId], references: [participantId])
-  event           Event       @relation(fields: [eventId], references: [eventId])
+registrations Registration[]
+contributions Contribution[]
+agendas Agenda[]
 }
 
-model Submission {
-  submissionId    Int         @id @default(autoincrement())
-  eventId         Int
-  participantId   Int
-  title           String      @db.VarChar(255)
-  abstract        String?
-  submissionDate  DateTime
-  status          SubmissionStatus @default(submitted)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Registration {
+registrationId Int @id @default(autoincrement())
+memberId Int
+workshopId Int
+signupDate DateTime
+ticketCategory TicketCategory
+transactionStatus PaymentStatus @default(pending)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  event           Event       @relation(fields: [eventId], references: [eventId])
-  participant     Participant @relation(fields: [participantId], references: [participantId])
-  feedbacks       Feedback[]
+member Member @relation(fields: [memberId], references: [memberId])
+workshop Workshop @relation(fields: [workshopId], references: [workshopId])
 }
 
-model Feedback {
-  feedbackId    Int         @id @default(autoincrement())
-  submissionId  Int
-  evaluatorId   Int
-  comments      String?
-  rating        Int          
-  reviewDate    DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model Contribution {
+contributionId Int @id @default(autoincrement())
+workshopId Int
+memberId Int
+headline String @db.VarChar(255)
+summary String?
+submissionTime DateTime
+currentState SubmissionState @default(drafted)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  submission    Submission  @relation(fields: [submissionId], references: [submissionId])
-  evaluator     Participant @relation("cz", fields: [evaluatorId], references: [participantId])
+workshop Workshop @relation(fields: [workshopId], references: [workshopId])
+member Member @relation(fields: [memberId], references: [memberId])
+reviews Review[]
 }
 
-model Schedule {
-  scheduleId    Int         @id @default(autoincrement())
-  eventId       Int
-  time          DateTime
-  location      String?     @db.VarChar(255)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model Agenda {
+agendaId Int @id @default(autoincrement())
+workshopId Int
+scheduledTime DateTime
+location String? @db.VarChar(255)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  event         Event       @relation(fields: [eventId], references: [eventId])
+workshop Workshop @relation(fields: [workshopId], references: [workshopId])
 }
 
-model MentorshipProgram {
-  mentorshipId Int            @id @default(autoincrement())
-  mentorId     Int
-  menteeId     Int
-  startDate    DateTime
-  endDate      DateTime?
-  status       MentorshipStatus @default(active)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Mentorship {
+mentorshipId Int @id @default(autoincrement())
+mentorUserId Int
+menteeUserId Int
+initiationDate DateTime
+conclusionDate DateTime?
+mentorshipState MentorshipState @default(active)
+createdOn DateTime @default(now())
+modifiedOn DateTime @updatedAt
 
-  mentor       Participant @relation("Mentor", fields: [mentorId], references: [participantId])
-  mentee       Participant @relation("Mentee", fields: [menteeId], references: [participantId])
+mentor Member @relation("Mentor", fields: [mentorUserId], references: [memberId])
+mentee Member @relation("Mentee", fields: [menteeUserId], references: [memberId])
 }
 
-enum Role {
-  participant
-  organizer
-  reviewer
-  mentor
-  admin
+enum UserRole {
+member
+coordinator
+evaluator
+advisor
+administrator
 }
 
-enum TicketType {
-  regular
-  student
-  vip
+enum TicketCategory {
+standard
+scholar
+exclusive
 }
 
 enum PaymentStatus {
-  pending
-  completed
-  failed
+pending
+settled
+declined
 }
 
-enum SubmissionStatus {
-  submitted
-  under_review
-  accepted
-  rejected
+enum SubmissionState {
+drafted
+in_review
+approved
+dismissed
 }
 
-enum MentorshipStatus {
-  active
-  completed
-  cancelled
+enum MentorshipState {
+active
+completed
+halted
 }

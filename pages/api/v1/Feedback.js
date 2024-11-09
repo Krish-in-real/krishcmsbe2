@@ -5,9 +5,9 @@ import {
   deleteItem,
 } from "../../../utils/crud";
 
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   const method = req.method;
-  const tableName = "feedback";
+  const tableName = "review";
   switch (method) {
     case "POST":
       return createItem(tableName, req, res);
@@ -22,3 +22,6 @@ export default async function handler(req, res) {
       res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
+
+
+export default withCors(handler)

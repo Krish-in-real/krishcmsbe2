@@ -1,14 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from 'uuid';
+import withCors from "@/utils/cors";
 
 const prisma = new PrismaClient();
 
 const createItem = async (modelName, req, res) => {
   try {
     const data = req.body;
-    if (modelName === 'event') {
+    if (modelName === 'Workshop') {
       let myuuid = uuidv4();
-      data.meetingLink = `https://streaming.nextintech.in/${myuuid}`;
+      data.virtualLink = `https://streaming.nextintech.in/${myuuid}`;
     }
     const newItem = await prisma[modelName].create({ data });
     return res.status(201).json({ success: true, data: newItem });
@@ -49,13 +50,13 @@ const updateItem = async (modelName, req, res) => {
 const deleteItem = async (modelName, req, res) => {
   try {
     const { id } = req.body;
-    
+
     if (!id) {
       return res.status(400).json({ success: false, error: "ID is required" });
     }
 
     const deletedItem = await prisma[modelName].delete({
-      where: { participantId :  id },
+      where: { participantId: id },
     });
 
     return res.status(200).json({ success: true, data: deletedItem });
@@ -79,9 +80,9 @@ const listItem = async (modelName, req, res, includeRelations = {}) => {
 };
 
 module.exports = {
-  createItem,
-  getItem,
-  updateItem,
-  deleteItem,
-  listItem,
+  createItem: withCors(createItem),
+  getItem: withCors(getItem),
+  updateItem: withCors(updateItem),
+  deleteItem: withCors(deleteItem),
+  listItem: withCors(listItem),
 };

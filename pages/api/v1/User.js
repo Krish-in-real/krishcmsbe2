@@ -1,3 +1,4 @@
+import withCors from "@/utils/cors";
 import {
   createItem,
   getItem,
@@ -5,7 +6,7 @@ import {
   deleteItem,
 } from "../../../utils/crud";
 
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   const method = req.method;
   const tableName = "user";
   switch (method) {
@@ -23,3 +24,4 @@ export default async function handler(req, res) {
   }
 }
 
+export default withCors(handler)
